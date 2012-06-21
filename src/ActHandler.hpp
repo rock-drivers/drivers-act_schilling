@@ -8,6 +8,29 @@
 
 namespace act_schilling
 {
+  
+  enum ActRunState{
+    RESET,
+    INIT,
+    INITIALIZED,
+    FINDMIN,
+    FINDMAX,
+    SETZERO,
+    GOHOME,
+    RUNNING
+  };
+  
+  struct CalibData{
+    int min;
+    int max;
+    int zero;
+  };
+  
+  struct LastPos{
+    int pos;
+    int count;
+  };
+  
   class ActHandler : public base_schilling::Driver
   {
     public:
@@ -16,18 +39,30 @@ namespace act_schilling
       virtual void requestStatus();
       virtual bool isIdle();
       ActData getData() const;
+      ActState getState() const;
+      void setPos(int count, float velCoeff = 1);
+      void setAnglePos(int ang, float velCoeff = 1);
+      void setVelocity(int vel);
+      void calibrate();
+      
     protected:
       void enqueueCmdMsg(raw::CMD cmd,int value = 0, int length = 0);
       int extractPacket (uint8_t const *buffer, size_t buffer_size) const;
       virtual void setCS(char *cData);
       virtual void checkCS(const char *cData);
       virtual void parseReply(const std::vector<uint8_t>* buffer);
+      int ang2count(int ang);
+      int count2ang(int count);
+      bool checkMoving(int pos);
       std::deque<std::vector<uint8_t> > mMsgQueue;
     private:
       Config mConfig;
       raw::CMD mLastCmd;
       ActData mActData;
-      
+      ActState mActState;
+      ActRunState mActRunState;
+      LastPos mLastPos;
+      CalibData mCalibData;      
   };
 }
 

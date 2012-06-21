@@ -3,15 +3,17 @@
 
 namespace act_schilling
 {
+
   
   
 struct Config
 {
-        int trapVel;	
+        int velocity;	
 	bool velMode;
+	int homePos;
 	
 	Config()
-            : trapVel(20000),
+            : velocity(20000),
 	      velMode(true)
         {   
         }   

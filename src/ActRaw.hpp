@@ -4,6 +4,8 @@
 #define ACT_SCHILLING_ACK 0x06
 #define ACT_SCHILLING_NAK 0x15
 
+#define ACT_FULLPOS  205000
+
 namespace act_schilling {
   namespace raw {
     

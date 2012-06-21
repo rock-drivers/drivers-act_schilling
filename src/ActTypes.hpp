@@ -12,9 +12,14 @@ namespace act_schilling {
 	uint8_t driveStatus;
 	uint8_t ctrlMode;
 	int shaftPos;
+	int shaftAng;
 	int shaftVel;
     };
     
+    struct ActState {
+      bool initialized;
+      bool calibrated;
+    };    
 }
 
 
