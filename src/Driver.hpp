@@ -17,7 +17,6 @@ namespace act_schilling
 	    void read();
 
 	    /** write next package in queue if available
-	    *  writes only if last command sequence has finished or discarded
 	    */
 	    void writeNext();
 	    

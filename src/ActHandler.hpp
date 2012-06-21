@@ -44,7 +44,10 @@ namespace act_schilling
       void setAnglePos(int ang, float velCoeff = 1);
       void setVelocity(int vel);
       void calibrate();
-      
+      void setControlMode(ControlMode ctrlMode);
+      ActPosition getPosition();
+      ActDriveStatus getDriveStatus();
+      ActInfo getActInfo();
     protected:
       void enqueueCmdMsg(raw::CMD cmd,int value = 0, int length = 0);
       int extractPacket (uint8_t const *buffer, size_t buffer_size) const;
@@ -54,15 +57,20 @@ namespace act_schilling
       int ang2count(int ang);
       int count2ang(int count);
       bool checkMoving(int pos);
+      virtual void writeNext() = 0;
       std::deque<std::vector<uint8_t> > mMsgQueue;
-    private:
-      Config mConfig;
       raw::CMD mLastCmd;
+    private:
+      void checkRunState();
+      Config mConfig;
       ActData mActData;
       ActState mActState;
       ActRunState mActRunState;
       LastPos mLastPos;
-      CalibData mCalibData;      
+      CalibData mCalibData;    
+      ActPosition mActPosition;
+      ActDriveStatus mActDriveStatus;
+      ActInfo mActInfo;
   };
 }
 

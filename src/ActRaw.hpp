@@ -26,12 +26,6 @@ namespace act_schilling {
 	CMD_SETSHAFTPOS	= 0x31	
       };
       
-      enum CtrlMode{
-	MODE_NONE = 0,
-	MODE_POS,
-	MODE_VEL
-      };
-      
       struct MsgHeader
       {
 	unsigned char type;

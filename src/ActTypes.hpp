@@ -19,7 +19,37 @@ namespace act_schilling {
     struct ActState {
       bool initialized;
       bool calibrated;
-    };    
+    }; 
+    
+    struct ActPosition{ 
+      base::Time time;
+      int encoderStatus;
+      int extAbsPos;
+      int shaftPos;
+      int shaftEncStatus;
+      int shaftAbsPos;
+    };
+    
+    struct ActDriveStatus{
+      base::Time time;
+      int driveStatus;
+      int driveProtectStatus;
+      int systemProtectStatus;
+      int driveSystemStatus1;
+      int driveSystemStatus2;
+    };
+    
+    struct ActInfo{
+      base::Time time;
+      int serialNo;
+      int firmwareRev;
+    };
+    
+    enum ControlMode{
+	MODE_NONE = 0,
+	MODE_POS,
+	MODE_VEL
+    };
 }
 
 

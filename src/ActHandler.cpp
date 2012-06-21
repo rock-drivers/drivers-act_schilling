@@ -11,7 +11,7 @@ using namespace std;
 
 ActHandler::ActHandler(const Config& config)
   : base_schilling::Driver(64),
-    mConfig(config),mLastCmd(CMD_NONE)
+    mLastCmd(CMD_NONE), mConfig(config)
 {
   mActData.ctrlStatus = -1;
   mActData.driveStatus = -1;
@@ -30,7 +30,8 @@ ActHandler::ActHandler(const Config& config)
 void ActHandler::initDevice()
 {
   cout <<"initDevice" <<endl;
-  int ctrlMode = mConfig.velMode ? act_schilling::raw::MODE_VEL : act_schilling::raw::MODE_POS;
+  //int ctrlMode = mConfig.velMode ? act_schilling::raw::MODE_VEL : act_schilling::raw::MODE_POS;
+  int ctrlMode = (int)mConfig.ctrlMode;
   mActRunState = INIT;
   mMsgQueue.clear();
   enqueueCmdMsg(CMD_CLRERR);
@@ -90,6 +91,53 @@ void ActHandler::calibrate()
   setAnglePos(-360,CAL_VEL_COEFF);
 }
 
+void ActHandler::setControlMode(ControlMode ctrlMode)
+{
+  enqueueCmdMsg(CMD_SETCTRLMODE,ctrlMode,1);
+  mConfig.ctrlMode = ctrlMode;
+}
+
+ActPosition ActHandler::getPosition()
+{
+  base::Time startTime = base::Time::now();
+  enqueueCmdMsg(CMD_GETPOS);
+  while(mActPosition.time < startTime){
+    if((base::Time::now()-startTime).microseconds > 500){
+      throw std::runtime_error("getPosition timeout");
+    }
+    writeNext();
+    usleep(100);
+  }
+  return mActPosition;
+}
+
+ActDriveStatus ActHandler::getDriveStatus()
+{
+  base::Time startTime = base::Time::now();
+  enqueueCmdMsg(CMD_GETDRVSTAT);
+  while(mActDriveStatus.time < startTime){
+    if((base::Time::now()-startTime).microseconds > 500){
+      throw std::runtime_error("getDriveStatus timeout");
+    }
+    writeNext();
+    usleep(100);
+  }
+  return mActDriveStatus;
+}
+
+ActInfo ActHandler::getActInfo()
+{
+  base::Time startTime = base::Time::now();
+  enqueueCmdMsg(CMD_GETACTINFO);
+  while(mActInfo.time < startTime){
+    if((base::Time::now()-startTime).microseconds > 500){
+      throw std::runtime_error("getDriveStatus timeout");
+    }
+    writeNext();
+    usleep(100);
+  }
+  return mActInfo;
+}
 
 void ActHandler::enqueueCmdMsg(CMD cmd,int value, int length)
 {
@@ -104,7 +152,6 @@ void ActHandler::enqueueCmdMsg(CMD cmd,int value, int length)
     msg[i+3] = (value & (0xFF<<shift)) >> shift;
   }
   setCS((char*)msg.data());
-  mLastCmd = cmd;
   mMsgQueue.push_back(msg);
 }
 
@@ -180,71 +227,76 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
   }
   else if((*buffer)[0]==SCHILL_REPL_UNCHG_MSG ||
     (*buffer)[0]==SCHILL_REPL_CHG_MSG){
-      int i = ((act_schilling::raw::MsgHeader*)(buffer->data()))->length;
-      cout <<"Reply Received, length: " <<i <<endl;
-      switch(mLastCmd){
-	case CMD_GETSTAT:{
-	  if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
-	    throw std::runtime_error("invalid reply length");
-	  }
-	  mActData.ctrlStatus = (*buffer)[2];
-	  mActData.driveStatus = (*buffer)[3];
-	  mActData.ctrlMode = (*buffer)[4];
-	  mActData.shaftPos = (*buffer)[8];
-	  mActData.shaftPos |= (*buffer)[7] << 8;
-	  mActData.shaftPos |= (*buffer)[6] << 16;
-	  mActData.shaftPos |= (*buffer)[5] << 24;
-	  mActData.shaftAng = count2ang(mActData.shaftPos);
-	  int16_t vel =  (*buffer)[10];
-	  vel |= (*buffer)[9] << 8;
-	  mActData.shaftVel = vel;
-	  //mActData.shaftVel = (*buffer)[10];
-	  //mActData.shaftVel |= (*buffer)[9] << 8;
-	  cout << "mActRunState : " <<mActRunState <<" position: " <<mActData.shaftPos <<endl;
-	  if(mActRunState < RUNNING){
-	    switch (mActRunState){
-	      case INIT : {
-		mActRunState = INITIALIZED;
-		mActState.initialized = true;
-		break;
-	      }
-	      case FINDMIN : {
-		if(!checkMoving(mActData.shaftPos)){
-		  mCalibData.min = mActData.shaftPos;
-		  mActRunState = FINDMAX;
-		  setAnglePos(360,CAL_VEL_COEFF);
-		}
-		break;
-	      }
-	      case FINDMAX : {
-		if(!checkMoving(mActData.shaftPos)){
-		  mActRunState = SETZERO;
-		  int range = mActData.shaftPos - mCalibData.min;
-		  setPos(range/2+mCalibData.min);
-		  mCalibData.max = range/2;
-		  mCalibData.min = mCalibData.max*(-1);		  
-		}
-		break;
-	      }
-	      case SETZERO: {
-		if(!checkMoving(mActData.shaftPos)){
-		  mActRunState = GOHOME; 
-		  enqueueCmdMsg(CMD_CLRSHAFTPOS);
-		  setPos(ang2count(mConfig.homePos));
-		}
-		break;
-	      }
-	      case GOHOME: {
-		if(!checkMoving(mActData.shaftPos)){
-		  mActRunState = RUNNING;
-		  mActState.calibrated = true;		
-		}
-	      }
-	      default: break;
-	    }
-	  }
-	  mLastPos.pos = mActData.shaftPos;
-      }break;
+    int length = ((act_schilling::raw::MsgHeader*)(buffer->data()))->length;
+    cout <<"Reply Received, length: " <<length <<" mLastCmd: " <<mLastCmd <<endl;
+    switch(mLastCmd){
+      case CMD_GETSTAT:{
+	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
+	  throw std::runtime_error("invalid reply length");
+	}
+	mActData.time = base::Time::now();
+	mActData.ctrlStatus = (*buffer)[2];
+	mActData.driveStatus = (*buffer)[3];
+	mActData.ctrlMode = (*buffer)[4];
+	mActData.shaftPos = (*buffer)[8];
+	mActData.shaftPos |= (*buffer)[7] << 8;
+	mActData.shaftPos |= (*buffer)[6] << 16;
+	mActData.shaftPos |= (*buffer)[5] << 24;
+	mActData.shaftAng = count2ang(mActData.shaftPos);
+	int16_t vel =  (*buffer)[10];
+	vel |= (*buffer)[9] << 8;
+	mActData.shaftVel = vel;
+	cout << "mActRunState : " <<mActRunState <<" position: " <<mActData.shaftPos <<endl;
+	if(mActRunState < RUNNING){
+	  checkRunState();
+	}
+	mLastPos.pos = mActData.shaftPos;
+	break;
+      }
+      case CMD_GETPOS:{
+	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0D){
+	  throw std::runtime_error("invalid reply length");
+	}
+	mActPosition.time = base::Time::now();
+	mActPosition.encoderStatus = (*buffer)[2];
+	mActPosition.extAbsPos = (*buffer)[4];
+	mActPosition.extAbsPos |= (*buffer)[3] << 8;
+	mActPosition.shaftPos = (*buffer)[8];
+	mActPosition.shaftPos |= (*buffer)[7] << 8;
+	mActPosition.shaftPos |= (*buffer)[6] << 16;
+	mActPosition.shaftPos |= (*buffer)[5] << 24;
+	mActPosition.shaftEncStatus = (*buffer)[9];
+	mActPosition.shaftAbsPos = (*buffer)[11];
+	mActPosition.shaftAbsPos |= (*buffer)[10] << 8;
+	break;
+      }
+     case CMD_GETDRVSTAT:{
+	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
+	  throw std::runtime_error("invalid reply length");
+	}
+	mActDriveStatus.time = base::Time::now();
+	mActDriveStatus.driveStatus = (*buffer)[2];
+	mActDriveStatus.driveProtectStatus = (*buffer)[4];
+	mActDriveStatus.driveProtectStatus |= (*buffer)[3] << 8;
+	mActDriveStatus.systemProtectStatus = (*buffer)[6];
+	mActDriveStatus.systemProtectStatus |= (*buffer)[5] << 8;
+	mActDriveStatus.driveSystemStatus1 = (*buffer)[8];
+	mActDriveStatus.driveSystemStatus1 |= (*buffer)[7] << 8;
+	mActDriveStatus.driveSystemStatus2 = (*buffer)[10];
+	mActDriveStatus.driveSystemStatus2 |= (*buffer)[9] << 8;
+	break;
+      }
+      case CMD_GETACTINFO:{
+	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
+	  throw std::runtime_error("invalid reply length");
+	}
+	mActDriveStatus.time = base::Time::now();
+	mActInfo.serialNo = (*buffer)[7];
+	mActInfo.serialNo |= (*buffer)[6];
+	mActInfo.firmwareRev = (*buffer)[8];
+	break;
+      }
+
       default: break;    
     }
   }
@@ -273,4 +325,48 @@ bool ActHandler::checkMoving(int pos)
     mLastPos.count = 0;
   }
   return true;  
+}
+
+void ActHandler::checkRunState()
+{
+  switch (mActRunState){
+    case INIT : {
+	mActRunState = INITIALIZED;
+	mActState.initialized = true;
+	break;
+    }
+    case FINDMIN : {
+      if(!checkMoving(mActData.shaftPos)){
+	mCalibData.min = mActData.shaftPos;
+	mActRunState = FINDMAX;
+	setAnglePos(360,CAL_VEL_COEFF);
+      }
+      break;
+    }
+    case FINDMAX : {
+      if(!checkMoving(mActData.shaftPos)){
+	mActRunState = SETZERO;
+	int range = mActData.shaftPos - mCalibData.min;
+	setPos(range/2+mCalibData.min);
+	mCalibData.max = range/2;
+	mCalibData.min = mCalibData.max*(-1);		  
+      }
+      break;
+    }
+    case SETZERO: {
+      if(!checkMoving(mActData.shaftPos)){
+	mActRunState = GOHOME; 
+	enqueueCmdMsg(CMD_CLRSHAFTPOS);
+	setPos(ang2count(mConfig.homePos));
+      }
+      break;
+    }
+    case GOHOME: {
+      if(!checkMoving(mActData.shaftPos)){
+	mActRunState = RUNNING;
+	mActState.calibrated = true;		
+      }
+    }
+    default: break;
+  }
 }

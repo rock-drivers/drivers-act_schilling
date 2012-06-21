@@ -33,8 +33,9 @@ void Driver::writeNext()
     if (!mMsgQueue.empty()) {
         std::vector<uint8_t> msg = mMsgQueue.front();
         mMsgQueue.pop_front();
+	mLastCmd = (act_schilling::raw::CMD)(((act_schilling::raw::MsgHeader*)msg.data())->cmd);
+	writePacket(msg.data(), msg.size());
 	cout <<"writing " <<msg[2] <<endl;
-        writePacket(msg.data(), msg.size());
 	read();
     }
 }
