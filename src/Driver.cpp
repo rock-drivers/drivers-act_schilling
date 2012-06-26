@@ -36,7 +36,6 @@ void Driver::writeNext()
 	mLastCmd = (act_schilling::raw::CMD)(((act_schilling::raw::MsgHeader*)msg.data())->cmd);
 	writePacket(msg.data(), msg.size());
 	cout <<"writing " <<msg[2] <<endl;
-	read();
     }
 }
 

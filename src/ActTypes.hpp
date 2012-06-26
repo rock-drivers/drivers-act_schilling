@@ -8,12 +8,17 @@ namespace act_schilling {
 
     struct ActData {
         base::Time  time;
+	uint8_t ctrlMode;
+	double shaftAng;
+	int shaftVel;
+    };
+    
+    struct ActDeviceStatus {
+        base::Time  time;
 	uint8_t ctrlStatus;
 	uint8_t driveStatus;
-	uint8_t ctrlMode;
-	int shaftPos;
-	int shaftAng;
-	int shaftVel;
+	uint8_t encoderStatus;
+	int shaftPos;	
     };
     
     struct ActState {
@@ -43,6 +48,11 @@ namespace act_schilling {
       base::Time time;
       int serialNo;
       int firmwareRev;
+    };
+    
+    struct ActBoundaries{
+      double min;
+      double max;
     };
     
     enum ControlMode{
