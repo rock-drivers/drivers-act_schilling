@@ -1,5 +1,6 @@
 #include "ActHandler.hpp"
 #include <base_schilling/SchillingRaw.hpp>
+#include "Error.hpp"
 #include <iostream>
 
 
@@ -8,12 +9,13 @@
 using namespace act_schilling;
 using namespace act_schilling::raw;
 using namespace std;
+using namespace oro_marum;
 
 ActHandler::ActHandler(const Config& config)
   : base_schilling::Driver(64),
     mLastCmd(CMD_NONE), mConfig(config)
 {
-  mActData.ctrlMode = -1;
+  mActData.ctrlMode = config.ctrlMode;
   mActData.shaftAng = 0;
   mActData.shaftVel = 0;
   mActDevStatus.ctrlStatus = -1;
@@ -24,7 +26,7 @@ ActHandler::ActHandler(const Config& config)
   mActState.calibrated = false;
   mActRunState = RESET;
   mActBoundaries.min = -360;
-  mActBoundaries.max = -360;
+  mActBoundaries.max = 360;
   mUpdateState.statusUpdate = false;
   mUpdateState.posUpdate = false;
   mUpdateState.driveStateUpdate = false;
@@ -76,6 +78,14 @@ void ActHandler::setPos(int count, float velCoeff)
   if(mConfig.ctrlMode == MODE_VEL && mActRunState == RUNNING){
     return;
   }
+  int i = ang2count(mActBoundaries.min);
+  if(count<i){
+    count = i;
+  }
+  i = ang2count(mActBoundaries.max);
+  if(count>i){
+    count = i;
+  }
   mLastPos.count = 0;
   enqueueCmdMsg(CMD_CLRERR);
   enqueueCmdMsg(CMD_SETSHAFTPOS,count,4);
@@ -99,6 +109,9 @@ void ActHandler::calibrate()
   if(mConfig.ctrlMode == MODE_NONE){
     return;
   }
+  if(mActRunState > INITIALIZED && mActRunState < RUNNING){
+    return;
+  }
   mActRunState = FINDMIN;
   enqueueCmdMsg(CMD_SETCTRLMODE,MODE_POS,1);
   setAnglePos(-360,CAL_VEL_COEFF);
@@ -106,6 +119,9 @@ void ActHandler::calibrate()
 
 void ActHandler::setControlMode(ControlMode const ctrlMode)
 {
+  if(mActRunState > INITIALIZED && mActRunState < RUNNING){
+    return;
+  }
   if(ctrlMode == mConfig.ctrlMode){
     return;
   }
@@ -171,7 +187,7 @@ bool ActHandler::hasPosUpdate()
   return false;
 }
 
-bool ActHandler::hasDriveStateUpdate()
+bool ActHandler::hasDriveStatusUpdate()
 {
   if(mUpdateState.driveStateUpdate){
     mUpdateState.driveStateUpdate=false;
@@ -252,11 +268,11 @@ void ActHandler::setCS(char *cData)
   return;
 }
 
-
 void ActHandler::checkCS(const char *cData)
 {
   if (!cData){
-    throw std::runtime_error("empty Data");
+    //throw std::runtime_error("empty Data");
+    throw MarError(MARSTR_CHECKSUM,MARERROR_CHECKSUM);
   }
   act_schilling::raw::MsgHeader  *header = (act_schilling::raw::MsgHeader*)cData;
   int length = header->length;
@@ -264,9 +280,11 @@ void ActHandler::checkCS(const char *cData)
   for (int i=0;i<length-1;i++){
     cCs += cData[i];
   }
+  cCs = 0x100 - (cCs & 0xFF);
   if (cCs != cData[length-1]){
-    throw std::runtime_error("invalid checksum");
-    }
+    throw MarError(MARSTR_CHECKSUM,MARERROR_CHECKSUM);
+    //throw std::runtime_error("invalid checksum");
+  }
   return;
 }
 
@@ -280,7 +298,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
   }
   else if((*buffer)[0]==SCHILL_REPL_UNCHG_MSG ||
     (*buffer)[0]==SCHILL_REPL_CHG_MSG){
-    int length = ((act_schilling::raw::MsgHeader*)(buffer->data()))->length;
+    checkCS((const char*)buffer->data());
     switch(mLastCmd){
       case CMD_GETSTAT:{
 	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
@@ -289,7 +307,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	mActData.time = base::Time::now();
 	mActDevStatus.ctrlStatus = (*buffer)[2];
 	mActDevStatus.driveStatus = (*buffer)[3];
-	mActData.ctrlMode = (*buffer)[4];
+	mActData.ctrlMode = (act_schilling::ControlMode)(*buffer)[4];
 	mActDevStatus.shaftPos = (*buffer)[8];
 	mActDevStatus.shaftPos |= (*buffer)[7] << 8;
 	mActDevStatus.shaftPos |= (*buffer)[6] << 16;
@@ -310,7 +328,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	  throw std::runtime_error("invalid reply length");
 	}
 	mActPosition.time = base::Time::now();
-	mActPosition.encoderStatus = (*buffer)[2];
+	mActPosition.extEncoderStatus = (*buffer)[2];
 	mActPosition.extAbsPos = (*buffer)[4];
 	mActPosition.extAbsPos |= (*buffer)[3] << 8;
 	mActPosition.shaftPos = (*buffer)[8];

@@ -12,7 +12,7 @@ namespace act_schilling
 	    Driver(const Config& config = Config());
 		  
 	    /** Read available packets on the I/O
-	    *
+	    * throws std::runtime_error
 	    * */
 	    void read();
 
