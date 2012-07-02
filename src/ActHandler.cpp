@@ -16,17 +16,7 @@ ActHandler::ActHandler(const Config& config)
     mLastCmd(CMD_NONE), mConfig(config)
 {
   mActData.ctrlMode = config.ctrlMode;
-  mActData.shaftAng = 0;
-  mActData.shaftVel = 0;
-  mActDevStatus.ctrlStatus = -1;
-  mActDevStatus.driveStatus = -1;
-  mActDevStatus.encoderStatus = -1;
-  mActDevStatus.shaftPos = 0;
-  mActState.initialized = false;
-  mActState.calibrated = false;
   mActRunState = RESET;
-  mActBoundaries.min = -360;
-  mActBoundaries.max = 360;
   mUpdateState.statusUpdate = false;
   mUpdateState.posUpdate = false;
   mUpdateState.driveStateUpdate = false;
@@ -271,8 +261,7 @@ void ActHandler::setCS(char *cData)
 void ActHandler::checkCS(const char *cData)
 {
   if (!cData){
-    //throw std::runtime_error("empty Data");
-    throw MarError(MARSTR_CHECKSUM,MARERROR_CHECKSUM);
+    throw MarError(MARSTR_PARAMINV,MARERROR_PARAMINV);
   }
   act_schilling::raw::MsgHeader  *header = (act_schilling::raw::MsgHeader*)cData;
   int length = header->length;
@@ -283,7 +272,6 @@ void ActHandler::checkCS(const char *cData)
   cCs = 0x100 - (cCs & 0xFF);
   if (cCs != cData[length-1]){
     throw MarError(MARSTR_CHECKSUM,MARERROR_CHECKSUM);
-    //throw std::runtime_error("invalid checksum");
   }
   return;
 }
@@ -294,7 +282,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
     return;
   }
   else if((*buffer)[0]==ACT_SCHILLING_NAK){
-    throw std::runtime_error("Device Nak");
+    throw MarError(MARSTR_DEVNAK,MARERROR_DEVNAK);
   }
   else if((*buffer)[0]==SCHILL_REPL_UNCHG_MSG ||
     (*buffer)[0]==SCHILL_REPL_CHG_MSG){
@@ -302,7 +290,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
     switch(mLastCmd){
       case CMD_GETSTAT:{
 	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
-	  throw std::runtime_error("invalid reply length");
+	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActData.time = base::Time::now();
 	mActDevStatus.ctrlStatus = (*buffer)[2];
@@ -325,7 +313,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
       }
       case CMD_GETPOS:{
 	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0D){
-	  throw std::runtime_error("invalid reply length");
+	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActPosition.time = base::Time::now();
 	mActPosition.extEncoderStatus = (*buffer)[2];
@@ -345,7 +333,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
       }
      case CMD_GETDRVSTAT:{
 	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
-	  throw std::runtime_error("invalid reply length");
+	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActDriveStatus.time = base::Time::now();
 	mActDriveStatus.driveStatus = (*buffer)[2];
@@ -362,7 +350,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
       }
       case CMD_GETACTINFO:{
 	if (((act_schilling::raw::MsgHeader*)(buffer->data()))->length != 0x0C){
-	  throw std::runtime_error("invalid reply length");
+	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActDriveStatus.time = base::Time::now();
 	mActInfo.serialNo = (*buffer)[7];

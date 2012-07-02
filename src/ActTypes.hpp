@@ -25,6 +25,9 @@ namespace act_schilling {
 	double shaftAng;  
 	//! actual shaft velocity
 	int shaftVel;	  
+	ActData()
+	  : time(base::Time::now()),ctrlMode(MODE_NONE),shaftAng(0),shaftVel(0)
+	{}
     };
     
     /** This structure holds status data */
@@ -39,6 +42,9 @@ namespace act_schilling {
 	uint8_t encoderStatus; 
 	//! shaft position in signed encoder counts
 	int shaftPos;	
+	ActDeviceStatus() :
+	  time(base::Time::now()),ctrlStatus(0),driveStatus(0),encoderStatus(0)
+	{}
     };
     
     /** This structure holds actuator run state information*/
@@ -47,6 +53,9 @@ namespace act_schilling {
       bool initialized;
       //! flag set when actuator is calibrated
       bool calibrated;
+      ActState()
+	: initialized(false),calibrated(false)
+      {}
     }; 
     
     /** This structure holds position data, usually not necessary for operational mode */
@@ -63,6 +72,9 @@ namespace act_schilling {
       uint8_t shaftEncStatus;
       //! shaft absolute position
       int shaftAbsPos;
+      ActPosition()
+	: time(base::Time::now()),extEncoderStatus(0),extAbsPos(0),shaftPos(0),shaftEncStatus(0)
+      {}
     };
     
     /** This structure holds drive status data, usually not necessary for operational mode */
@@ -79,6 +91,9 @@ namespace act_schilling {
       uint16_t driveSystemStatus1;
       //! drive system status 2
       int driveSystemStatus2;
+      ActDriveStatus()
+	: time(base::Time::now()),driveStatus(0),driveProtectStatus(0),systemProtectStatus(0),driveSystemStatus1(0),driveSystemStatus2(0)
+      {}
     };
     
     /** This structure holds actuator info, usually not necessary for operational mode */
@@ -89,6 +104,9 @@ namespace act_schilling {
       int serialNo;
       //! firmware revision
       int firmwareRev;
+      ActInfo()
+	: time(base::Time::now()),serialNo(0),firmwareRev(0)
+      {}
     };
     
     /** This structure holds min and max values, evaluated in calibration process */
@@ -97,6 +115,9 @@ namespace act_schilling {
       double min;
       //! max value evaluated by calibration process
       double max;
+      ActBoundaries()
+	: min(0),max(0)
+      {}
     };
     
     

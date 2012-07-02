@@ -12,6 +12,9 @@
 #define MARALARM_COMMS			MARALARM_BASE +  1
 
 #define MARERROR_CHECKSUM		MARERROR_BASE +  1
+#define MARERROR_DEVNAK			MARERROR_BASE +  2
+#define MARERROR_PARAMINV		MARERROR_BASE +  3
+#define MARERROR_DEVREPINV		MARERROR_BASE +  4
 
 #define ACTALARM_ENC_LIN_ALARM		ACTALARM_BASE +  1
 #define ACTALARM_ENC_RANGE_ERR 		ACTALARM_BASE +  2
@@ -31,6 +34,9 @@
 #define MARSTR_COMMS			"Communication failure"
 
 #define MARSTR_CHECKSUM			"checksum error"
+#define MARSTR_DEVNAK			"device Nak"
+#define MARSTR_PARAMINV			"invalid param"
+#define MARSTR_DEVREPINV		"invalid device response"
 
 #define ACTSTR_ENC_LIN_ALARM		"Encoder Linearity Alarm"
 #define ACTSTR_ENC_RANGE_ERR 		"Encoder Out of Range Error"
