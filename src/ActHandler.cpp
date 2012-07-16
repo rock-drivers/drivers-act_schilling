@@ -233,6 +233,9 @@ int ActHandler::extractPacket (uint8_t const *buffer, size_t buffer_size) const
       if(i){
 	return -i;
       }
+      if(buffer_size<2){
+	return 0;
+      }
       size_t len = ((act_schilling::raw::MsgHeader*)buffer)->length;
       if(buffer_size >= len){
 	return len;

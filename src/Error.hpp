@@ -6,6 +6,7 @@
 #define MARALARM_BASE			0x1000
 
 #define ACTALARM_BASE			0x2000
+#define UCMALARM_BASE			0x3000
 
 #define MARERROR_BASE			0x5000
 
@@ -29,6 +30,10 @@
 #define ACTALARM_DRV_FRAME_ERR		ACTALARM_BASE + 11
 #define ACTALARM_DRV_VOLT_TEMP		ACTALARM_BASE + 12
 
+#define UCMALARM_AD			UCMALARM_BASE + 1
+#define UCMALARM_DA			UCMALARM_BASE + 2
+#define UCMALARM_EEPROM			UCMALARM_BASE + 3
+
 
 
 #define MARSTR_COMMS			"Communication failure"
@@ -51,6 +56,9 @@
 #define ACTSTR_DRV_FRAME_ERR		"Drive Frame Error"
 #define ACTSTR_DRV_VOLT_TEMP		"Drive U/O Volt or Temp"
 
+#define UCMSTR_AD			"AD Failure"
+#define UCMSTR_DA			"DA Failure"
+#define UCMSTR_EEPROM			"EEPROM Failure"
 
 
 namespace oro_marum{
