@@ -2,6 +2,7 @@
 #define MARUM_ORO_ERROR_HPP
 
 #include <stdexcept>
+#include <base/time.h>
 
 #define MARALARM_BASE			0x1000
 

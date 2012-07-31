@@ -20,6 +20,8 @@
 #define ACT_DRV_FRAME_ERR	0x08
 #define ACT_DRV_VOLT_TEMP	0x10
 #define ACT_DRV_COMM_PHASE	0x20
+#define ACT_VEL_MAX_RPM		0xEA600
+#define ACT_VEL_COEFF		0x10
 
 
 

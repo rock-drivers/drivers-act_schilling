@@ -24,7 +24,7 @@ namespace act_schilling {
 	//! actual position in signed angle
 	double shaftAng;  
 	//! actual shaft velocity
-	int shaftVel;	  
+	double shaftVel;	  
 	ActData()
 	  : time(base::Time::now()),ctrlMode(MODE_NONE),shaftAng(0),shaftVel(0)
 	{}

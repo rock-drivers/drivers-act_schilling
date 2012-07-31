@@ -72,10 +72,10 @@ namespace act_schilling
       void setAnglePos(double ang, double velCoeff = 1);
       /** set actuator velocity, if actuator is in velocity mode, actuator starts moving with specified velocity
        * if actuator is in position mode call comes only into effect if actuator is moving
-       * @arg ang: signed angle
+       * @arg vel: velocity from 0 to 960000 RPM
        * @arg velCoeff: coefficient to adjust velocity preset by config
       */
-      void setVelocity(int vel);
+      void setVelocity(double vel);
       /** start calibration process, if calibration is completed calibration flag of ActState given by getState is set 
        * during calibration process calling this method has no effect
       */

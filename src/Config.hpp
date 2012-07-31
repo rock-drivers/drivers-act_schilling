@@ -13,7 +13,7 @@ struct Config
 	int homePos;
 	
 	Config()
-            : velocity(20000),
+            : velocity(1250),
 	      ctrlMode(MODE_VEL)
         {   
         }   

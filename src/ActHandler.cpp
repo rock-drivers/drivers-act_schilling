@@ -68,20 +68,21 @@ void ActHandler::setPos(int count, float velCoeff)
   if(mConfig.ctrlMode == MODE_VEL && mActRunState == RUNNING){
     return;
   }
-  int i = ang2count(mActBoundaries.min);
-  if(count<i){
-    count = i;
-  }
-  i = ang2count(mActBoundaries.max);
-  if(count>i){
-    count = i;
+  if(mActRunState == RUNNING){
+    int i = ang2count(mActBoundaries.min);
+    if(count<i){
+      count = i;
+    }
+    i = ang2count(mActBoundaries.max);
+    if(count>i){
+      count = i;
+    }
   }
   mLastPos.count = 0;
   enqueueCmdMsg(CMD_CLRERR);
   enqueueCmdMsg(CMD_SETSHAFTPOS,count,4);
-  enqueueCmdMsg(CMD_SETVEL,int(float(mConfig.velocity)*velCoeff),4);
+  setVelocity(double(mConfig.velocity)*velCoeff);
   enqueueCmdMsg(CMD_CLRERR);
-
 }
 
 void ActHandler::setAnglePos(double ang, double velCoeff)
@@ -89,9 +90,15 @@ void ActHandler::setAnglePos(double ang, double velCoeff)
   setPos(ang2count(ang),velCoeff);
 }
 
-void ActHandler::setVelocity(int vel)
+void ActHandler::setVelocity(double vel)
 {
-   enqueueCmdMsg(CMD_SETVEL,vel,4);
+  if(vel<(-ACT_VEL_MAX_RPM)){
+    vel = -ACT_VEL_MAX_RPM;
+  }  
+  if(vel>ACT_VEL_MAX_RPM){
+    vel = ACT_VEL_MAX_RPM;
+  }
+  enqueueCmdMsg(CMD_SETVEL,ACT_VEL_COEFF*vel,4);
 }
 
 void ActHandler::calibrate()
@@ -306,7 +313,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	mActData.shaftAng = count2ang(mActDevStatus.shaftPos);
 	int16_t vel =  (*buffer)[10];
 	vel |= (*buffer)[9] << 8;
-	mActData.shaftVel = vel;
+	mActData.shaftVel = double(vel)/ACT_VEL_COEFF;
 	if(mActRunState < RUNNING){
 	  checkRunState();
 	}
