@@ -20,13 +20,13 @@ namespace act_schilling {
 	//! timestamp
         base::Time  time; 
 	//! control mode
-	act_schilling::ControlMode ctrlMode; 
+	act_schilling::ControlMode ctrl_mode; 
 	//! actual position in signed angle
-	double shaftAng;  
+	double shaft_ang;  
 	//! actual shaft velocity
-	double shaftVel;	  
+	double shaft_vel;	  
 	ActData()
-	  : time(base::Time::now()),ctrlMode(MODE_NONE),shaftAng(0),shaftVel(0)
+	  : time(base::Time::now()),ctrl_mode(MODE_NONE),shaft_ang(0),shaft_vel(0)
 	{}
     };
     
@@ -35,15 +35,15 @@ namespace act_schilling {
 	//! timestamp
         base::Time  time; 
 	//! control status
-	uint8_t ctrlStatus; 
+	uint8_t ctrl_status; 
 	//! drive status
-	uint8_t driveStatus; 
+	uint8_t drive_status; 
 	//! encoder status
-	uint8_t encoderStatus; 
+	uint8_t encoder_status; 
 	//! shaft position in signed encoder counts
-	int shaftPos;	
+	int shaft_pos;	
 	ActDeviceStatus() :
-	  time(base::Time::now()),ctrlStatus(0),driveStatus(0),encoderStatus(0)
+	  time(base::Time::now()),ctrl_status(0),drive_status(0),encoder_status(0)
 	{}
     };
     
@@ -63,17 +63,17 @@ namespace act_schilling {
       //! timestamp
       base::Time time;
       //! external encoder status
-      uint8_t extEncoderStatus;
+      uint8_t ext_encoder_status;
       //! external encoder abs position
-      int extAbsPos;
+      int ext_abs_pos;
       //! shaft position
-      int shaftPos;
+      int shaft_pos;
       //! shaft encoder status
-      uint8_t shaftEncStatus;
+      uint8_t shaft_enc_status;
       //! shaft absolute position
-      int shaftAbsPos;
+      int shaft_abs_pos;
       ActPosition()
-	: time(base::Time::now()),extEncoderStatus(0),extAbsPos(0),shaftPos(0),shaftEncStatus(0)
+	: time(base::Time::now()),ext_encoder_status(0),ext_abs_pos(0),shaft_pos(0),shaft_enc_status(0),shaft_abs_pos(0)
       {}
     };
     
@@ -82,17 +82,17 @@ namespace act_schilling {
       //! timestamp
       base::Time time;
       //! drive status
-      uint8_t driveStatus;
+      uint8_t drive_status;
       //! drive protect status
-      uint16_t driveProtectStatus;
+      uint16_t drive_protect_status;
       //! system protect status
-      uint16_t systemProtectStatus;
+      uint16_t system_protect_status;
       //! drive system status 1
-      uint16_t driveSystemStatus1;
+      uint16_t drive_system_status1;
       //! drive system status 2
-      int driveSystemStatus2;
+      int drive_system_status2;
       ActDriveStatus()
-	: time(base::Time::now()),driveStatus(0),driveProtectStatus(0),systemProtectStatus(0),driveSystemStatus1(0),driveSystemStatus2(0)
+	: time(base::Time::now()),drive_status(0),drive_protect_status(0),system_protect_status(0),drive_system_status1(0),drive_system_status2(0)
       {}
     };
     
@@ -101,11 +101,11 @@ namespace act_schilling {
       //! timestamp
       base::Time time;
       //! serial number
-      int serialNo;
+      int serial_no;
       //! firmware revision
-      int firmwareRev;
+      int firmware_rev;
       ActInfo()
-	: time(base::Time::now()),serialNo(0),firmwareRev(0)
+	: time(base::Time::now()),serial_no(0),firmware_rev(0)
       {}
     };
     

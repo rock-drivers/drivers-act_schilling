@@ -15,17 +15,17 @@ ActHandler::ActHandler(const Config& config)
   : base_schilling::Driver(64),
     mLastCmd(CMD_NONE), mConfig(config)
 {
-  mActData.ctrlMode = config.ctrlMode;
+  mActData.ctrl_mode = config.ctrl_mode;
   mActRunState = RESET;
-  mUpdateState.statusUpdate = false;
-  mUpdateState.posUpdate = false;
-  mUpdateState.driveStateUpdate = false;
-  mUpdateState.actInfoUpdate = false;
+  mUpdateState.status_update = false;
+  mUpdateState.pos_update = false;
+  mUpdateState.drive_state_update = false;
+  mUpdateState.act_info_update = false;
 }
 
 void ActHandler::initDevice()
 {
-  int ctrlMode = (int)mConfig.ctrlMode;
+  int ctrlMode = (int)mConfig.ctrl_mode;
   mActRunState = INIT;
   mMsgQueue.clear();
   enqueueCmdMsg(CMD_CLRERR);
@@ -65,7 +65,7 @@ act_schilling::ActState ActHandler::getState() const
 
 void ActHandler::setPos(int count, float velCoeff)
 {
-  if(mConfig.ctrlMode == MODE_VEL && mActRunState == RUNNING){
+  if(mConfig.ctrl_mode == MODE_VEL && mActRunState == RUNNING){
     return;
   }
   if(mActRunState == RUNNING){
@@ -103,7 +103,7 @@ void ActHandler::setVelocity(double vel)
 
 void ActHandler::calibrate()
 {
-  if(mConfig.ctrlMode == MODE_NONE){
+  if(mConfig.ctrl_mode == MODE_NONE){
     return;
   }
   if(mActRunState > INITIALIZED && mActRunState < RUNNING){
@@ -119,14 +119,14 @@ void ActHandler::setControlMode(ControlMode const ctrlMode)
   if(mActRunState > INITIALIZED && mActRunState < RUNNING){
     return;
   }
-  if(ctrlMode == mConfig.ctrlMode){
+  if(ctrlMode == mConfig.ctrl_mode){
     return;
   }
   if(ctrlMode == MODE_VEL){
     setVelocity(0);
   }
   enqueueCmdMsg(CMD_SETCTRLMODE,ctrlMode,1);
-  mConfig.ctrlMode = ctrlMode;
+  mConfig.ctrl_mode = ctrlMode;
 }
 
 void ActHandler::requestPosition()
@@ -167,9 +167,9 @@ ActBoundaries ActHandler::getBoundaries()
 
 bool ActHandler::hasStatusUpdate()
 {
-   if(mUpdateState.statusUpdate && mUpdateState.posUpdate){
-    mUpdateState.statusUpdate=false;
-    mUpdateState.posUpdate=false;
+   if(mUpdateState.status_update && mUpdateState.pos_update){
+    mUpdateState.status_update=false;
+    mUpdateState.pos_update=false;
     return true;
   }
   return false;
@@ -177,8 +177,8 @@ bool ActHandler::hasStatusUpdate()
 
 bool ActHandler::hasPosUpdate()
 {
-  if(mUpdateState.posUpdate){
-    mUpdateState.posUpdate=false;
+  if(mUpdateState.pos_update){
+    mUpdateState.pos_update=false;
     return true;
   }
   return false;
@@ -186,8 +186,8 @@ bool ActHandler::hasPosUpdate()
 
 bool ActHandler::hasDriveStatusUpdate()
 {
-  if(mUpdateState.driveStateUpdate){
-    mUpdateState.driveStateUpdate=false;
+  if(mUpdateState.drive_state_update){
+    mUpdateState.drive_state_update=false;
     return true;
   }
   return false;
@@ -195,8 +195,8 @@ bool ActHandler::hasDriveStatusUpdate()
 
 bool ActHandler::hasActInfoUpdate()
 {
-  if(mUpdateState.actInfoUpdate){
-    mUpdateState.actInfoUpdate=false;
+  if(mUpdateState.act_info_update){
+    mUpdateState.act_info_update=false;
     return true;
   }
   return false;
@@ -303,22 +303,22 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActData.time = base::Time::now();
-	mActDevStatus.ctrlStatus = (*buffer)[2];
-	mActDevStatus.driveStatus = (*buffer)[3];
-	mActData.ctrlMode = (act_schilling::ControlMode)(*buffer)[4];
-	mActDevStatus.shaftPos = (*buffer)[8];
-	mActDevStatus.shaftPos |= (*buffer)[7] << 8;
-	mActDevStatus.shaftPos |= (*buffer)[6] << 16;
-	mActDevStatus.shaftPos |= (*buffer)[5] << 24;
-	mActData.shaftAng = count2ang(mActDevStatus.shaftPos);
+	mActDevStatus.ctrl_status = (*buffer)[2];
+	mActDevStatus.drive_status = (*buffer)[3];
+	mActData.ctrl_mode = (act_schilling::ControlMode)(*buffer)[4];
+	mActDevStatus.shaft_pos = (*buffer)[8];
+	mActDevStatus.shaft_pos |= (*buffer)[7] << 8;
+	mActDevStatus.shaft_pos |= (*buffer)[6] << 16;
+	mActDevStatus.shaft_pos |= (*buffer)[5] << 24;
+	mActData.shaft_ang = count2ang(mActDevStatus.shaft_pos);
 	int16_t vel =  (*buffer)[10];
 	vel |= (*buffer)[9] << 8;
-	mActData.shaftVel = double(vel)/ACT_VEL_COEFF;
+	mActData.shaft_vel = double(vel)/ACT_VEL_COEFF;
 	if(mActRunState < RUNNING){
 	  checkRunState();
 	}
-	mLastPos.pos = mActDevStatus.shaftPos;
-	mUpdateState.statusUpdate = true;
+	mLastPos.pos = mActDevStatus.shaft_pos;
+	mUpdateState.status_update = true;
 	break;
       }
       case CMD_GETPOS:{
@@ -326,19 +326,19 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActPosition.time = base::Time::now();
-	mActPosition.extEncoderStatus = (*buffer)[2];
-	mActPosition.extAbsPos = (*buffer)[4];
-	mActPosition.extAbsPos |= (*buffer)[3] << 8;
-	mActPosition.shaftPos = (*buffer)[8];
-	mActPosition.shaftPos |= (*buffer)[7] << 8;
-	mActPosition.shaftPos |= (*buffer)[6] << 16;
-	mActPosition.shaftPos |= (*buffer)[5] << 24;
-	mActPosition.shaftEncStatus = (*buffer)[9];
-	mActPosition.shaftAbsPos = (*buffer)[11];
-	mActPosition.shaftAbsPos |= (*buffer)[10] << 8;
-	mActDevStatus.encoderStatus = (*buffer)[9];
-	mUpdateState.posUpdate = true;
-	cout <<"shaftPos: " <<mActPosition.shaftPos <<" shaftAbsPos: " <<mActPosition.shaftAbsPos <<" extAbsPos: " <<mActPosition.extAbsPos <<endl;
+	mActPosition.ext_encoder_status = (*buffer)[2];
+	mActPosition.ext_abs_pos = (*buffer)[4];
+	mActPosition.ext_abs_pos |= (*buffer)[3] << 8;
+	mActPosition.shaft_pos = (*buffer)[8];
+	mActPosition.shaft_pos |= (*buffer)[7] << 8;
+	mActPosition.shaft_pos |= (*buffer)[6] << 16;
+	mActPosition.shaft_pos |= (*buffer)[5] << 24;
+	mActPosition.shaft_enc_status = (*buffer)[9];
+	mActPosition.shaft_abs_pos = (*buffer)[11];
+	mActPosition.shaft_abs_pos |= (*buffer)[10] << 8;
+	mActDevStatus.encoder_status = (*buffer)[9];
+	mUpdateState.pos_update = true;
+	cout <<"shaft_pos: " <<mActPosition.shaft_pos <<" shaft_abs_pos: " <<mActPosition.shaft_abs_pos <<" ext_abs_pos: " <<mActPosition.ext_abs_pos <<endl;
 	break;
       }
      case CMD_GETDRVSTAT:{
@@ -346,16 +346,16 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActDriveStatus.time = base::Time::now();
-	mActDriveStatus.driveStatus = (*buffer)[2];
-	mActDriveStatus.driveProtectStatus = (*buffer)[4];
-	mActDriveStatus.driveProtectStatus |= (*buffer)[3] << 8;
-	mActDriveStatus.systemProtectStatus = (*buffer)[6];
-	mActDriveStatus.systemProtectStatus |= (*buffer)[5] << 8;
-	mActDriveStatus.driveSystemStatus1 = (*buffer)[8];
-	mActDriveStatus.driveSystemStatus1 |= (*buffer)[7] << 8;
-	mActDriveStatus.driveSystemStatus2 = (*buffer)[10];
-	mActDriveStatus.driveSystemStatus2 |= (*buffer)[9] << 8;
-	mUpdateState.driveStateUpdate = true;
+	mActDriveStatus.drive_status = (*buffer)[2];
+	mActDriveStatus.drive_protect_status = (*buffer)[4];
+	mActDriveStatus.drive_protect_status |= (*buffer)[3] << 8;
+	mActDriveStatus.system_protect_status = (*buffer)[6];
+	mActDriveStatus.system_protect_status |= (*buffer)[5] << 8;
+	mActDriveStatus.drive_system_status1 = (*buffer)[8];
+	mActDriveStatus.drive_system_status1 |= (*buffer)[7] << 8;
+	mActDriveStatus.drive_system_status2 = (*buffer)[10];
+	mActDriveStatus.drive_system_status2 |= (*buffer)[9] << 8;
+	mUpdateState.drive_state_update = true;
 	break;
       }
       case CMD_GETACTINFO:{
@@ -363,10 +363,10 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	  throw MarError(MARSTR_DEVREPINV,MARERROR_DEVREPINV);
 	}
 	mActDriveStatus.time = base::Time::now();
-	mActInfo.serialNo = (*buffer)[7];
-	mActInfo.serialNo |= (*buffer)[6];
-	mActInfo.firmwareRev = (*buffer)[8];
-	mUpdateState.actInfoUpdate = true;
+	mActInfo.serial_no = (*buffer)[7];
+	mActInfo.serial_no |= (*buffer)[6];
+	mActInfo.firmware_rev = (*buffer)[8];
+	mUpdateState.act_info_update = true;
 	break;
       }
 
@@ -409,17 +409,17 @@ void ActHandler::checkRunState()
 	break;
     }
     case FINDMIN : {
-      if(!checkMoving(mActDevStatus.shaftPos)){
-	mActBoundaries.min = mActDevStatus.shaftPos;
+      if(!checkMoving(mActDevStatus.shaft_pos)){
+	mActBoundaries.min = mActDevStatus.shaft_pos;
 	mActRunState = FINDMAX;
 	setAnglePos(360,CAL_VEL_COEFF);
       }
       break;
     }
     case FINDMAX : {
-      if(!checkMoving(mActDevStatus.shaftPos)){
+      if(!checkMoving(mActDevStatus.shaft_pos)){
 	mActRunState = SETZERO;
-	int range = mActDevStatus.shaftPos - mActBoundaries.min;
+	int range = mActDevStatus.shaft_pos - mActBoundaries.min;
 	setPos(range/2+mActBoundaries.min);
 	mActBoundaries.max = count2ang(range/2);
 	mActBoundaries.min = mActBoundaries.max*(-1);		  
@@ -427,17 +427,17 @@ void ActHandler::checkRunState()
       break;
     }
     case SETZERO: {
-      if(!checkMoving(mActDevStatus.shaftPos)){
+      if(!checkMoving(mActDevStatus.shaft_pos)){
 	mActRunState = GOHOME; 
 	enqueueCmdMsg(CMD_CLRSHAFTPOS);
-	setPos(ang2count(mConfig.homePos));
+	setPos(ang2count(mConfig.home_pos));
       }
       break;
     }
     case GOHOME: {
-      if(!checkMoving(mActDevStatus.shaftPos)){
+      if(!checkMoving(mActDevStatus.shaft_pos)){
 	setVelocity(0);
-	enqueueCmdMsg(CMD_SETCTRLMODE,mConfig.ctrlMode,1);
+	enqueueCmdMsg(CMD_SETCTRLMODE,mConfig.ctrl_mode,1);
 	mActRunState = RUNNING;
 	mActState.calibrated = true;		
       }

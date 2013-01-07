@@ -9,12 +9,13 @@ namespace act_schilling
 struct Config
 {
         int velocity;	
-	ControlMode ctrlMode;
-	int homePos;
+	ControlMode ctrl_mode;
+	int home_pos;
 	
 	Config()
             : velocity(1250),
-	      ctrlMode(MODE_VEL)
+	      ctrl_mode(MODE_VEL),
+	      home_pos(0)
         {   
         }   
 

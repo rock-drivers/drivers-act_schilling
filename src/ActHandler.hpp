@@ -28,10 +28,10 @@ namespace act_schilling
     };
   
     struct UpdateState{
-      bool statusUpdate;
-      bool posUpdate;
-      bool driveStateUpdate;
-      bool actInfoUpdate;
+      bool status_update;
+      bool pos_update;
+      bool drive_state_update;
+      bool act_info_update;
     };
   
     public:

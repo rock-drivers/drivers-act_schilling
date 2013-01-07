@@ -50,6 +50,9 @@ namespace act_schilling {
 	unsigned char type;
 	unsigned char length;
 	unsigned char cmd;
+	MsgHeader()
+	  : type(0),length(0),cmd(0)
+	  {}
       };
   }
 }
