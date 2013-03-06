@@ -20,6 +20,8 @@ namespace act_schilling
 	    */
 	    void writeNext();
 	    
+	    void clearReadBuffer();
+	    
 	    		
 			
 	};

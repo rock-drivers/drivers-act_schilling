@@ -25,6 +25,7 @@ ActHandler::ActHandler(const Config& config)
 
 void ActHandler::initDevice()
 {
+  //cout <<"ActHandler initDevice" <<endl;
   int ctrlMode = (int)mConfig.ctrl_mode;
   mActRunState = INIT;
   mMsgQueue.clear();
@@ -44,7 +45,8 @@ void ActHandler::requestStatus()
 
 bool ActHandler::isIdle()
 {
-  return mMsgQueue.empty();
+  //return mMsgQueue.empty();
+  return !mLastCmd;
 }
 
 act_schilling::ActData ActHandler::getData() const
@@ -226,6 +228,7 @@ void ActHandler::enqueueCmdMsg(CMD cmd,int value, int length)
 
 int ActHandler::extractPacket (uint8_t const *buffer, size_t buffer_size) const
 {
+  //cout <<"ActHandler extractPacket" <<buffer_size <<endl;
   for (size_t i = 0; i < buffer_size; i++) {
     if (buffer[i] == ACT_SCHILLING_ACK)
     {
@@ -245,11 +248,14 @@ int ActHandler::extractPacket (uint8_t const *buffer, size_t buffer_size) const
       }
       size_t len = ((act_schilling::raw::MsgHeader*)buffer)->length;
       if(buffer_size >= len){
+	//cout <<"returning len " <<len <<endl;
 	return len;
       }
+      //cout <<"returning 0" <<endl;
       return 0;
     }
   }
+  //cout <<"returning -buffer_size " <<(-buffer_size) <<endl;
   return -buffer_size;
 }
 
@@ -289,6 +295,8 @@ void ActHandler::checkCS(const char *cData)
 void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 {
   if((*buffer)[0]==ACT_SCHILLING_ACK){
+    //cout <<" ActHandler ACK received" <<endl;  
+    mLastCmd = CMD_NONE;
     return;
   }
   else if((*buffer)[0]==ACT_SCHILLING_NAK){
@@ -338,7 +346,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
 	mActPosition.shaft_abs_pos |= (*buffer)[10] << 8;
 	mActDevStatus.encoder_status = (*buffer)[9];
 	mUpdateState.pos_update = true;
-	cout <<"shaft_pos: " <<mActPosition.shaft_pos <<" shaft_abs_pos: " <<mActPosition.shaft_abs_pos <<" ext_abs_pos: " <<mActPosition.ext_abs_pos <<endl;
+	//cout <<"shaft_pos: " <<mActPosition.shaft_pos <<" shaft_abs_pos: " <<mActPosition.shaft_abs_pos <<" ext_abs_pos: " <<mActPosition.ext_abs_pos <<endl;
 	break;
       }
      case CMD_GETDRVSTAT:{
@@ -373,6 +381,7 @@ void ActHandler::parseReply(const std::vector<uint8_t>* buffer)
       default: break;    
     }
   }
+  mLastCmd = CMD_NONE;
 }
 
 
@@ -402,6 +411,7 @@ bool ActHandler::checkMoving(int pos)
 
 void ActHandler::checkRunState()
 {
+  //cout <<"checkRunState " <<mActRunState <<endl;
   switch (mActRunState){
     case INIT : {
 	mActRunState = INITIALIZED;
