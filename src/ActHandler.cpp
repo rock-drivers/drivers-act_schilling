@@ -211,6 +211,13 @@ void ActHandler::setResetState()
   mActRunState = RESET;
 }
 
+void ActHandler::clearError()
+{
+  enqueueCmdMsg(CMD_CLRERR);
+  enqueueCmdMsg(CMD_CLRERR);
+}
+
+
 void ActHandler::enqueueCmdMsg(CMD cmd,int value, int length)
 {
   std::vector<uint8_t> msg(4+length);

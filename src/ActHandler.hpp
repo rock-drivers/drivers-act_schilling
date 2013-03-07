@@ -132,6 +132,10 @@ namespace act_schilling
        * 
       */
       void setResetState();
+      /** call this to try to clear device error
+       * 
+      */
+      void clearError();
     protected:
       void enqueueCmdMsg(raw::CMD cmd,int value = 0, int length = 0);
       int extractPacket (uint8_t const *buffer, size_t buffer_size) const;
