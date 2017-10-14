@@ -1,7 +1,7 @@
 #ifndef ACT_SCHILLING_PANTILTTYPES_HPP
 #define ACT_SCHILLING_PANTILTTYPES_HPP
 
-#include <base/time.h>
+#include <base/Time.hpp>
 #include <vector>
 
 namespace act_schilling {

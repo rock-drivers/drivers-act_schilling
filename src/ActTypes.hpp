@@ -1,7 +1,7 @@
 #ifndef ACT_SCHILLING_ACTTYPES_HPP
 #define ACT_SCHILLING_ACTTYPES_HPP
 
-#include <base/time.h>
+#include <base/Time.hpp>
 
 namespace act_schilling {
    
